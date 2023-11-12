@@ -1,37 +1,26 @@
-// server.js
-const express = require('express');
-const http = require('http');
-const socketIO = require('socket.io');
-const cors = require('cors'); // Import the cors middleware
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = socketIo(server);
 
-app.use(cors()); // Enable CORS for all routes
+io.on("connection", (socket) => {
+    console.log("A user connected");
 
-app.use(express.static('public'));
+    // Listen for motion data from the PC
+    socket.on("sendMotionData", (data) => {
+        // Broadcast the motion data to all connected clients
+        io.emit("motionData", data);
+    });
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+    socket.on("disconnect", () => {
+        console.log("A user disconnected");
+    });
 });
 
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  socket.on('motionData', (data) => {
-    console.log('Motion data received:', data);
-    // Process and handle motion data as needed
-    io.emit('motionData', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
-});
-
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
