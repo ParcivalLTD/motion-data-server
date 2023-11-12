@@ -1,27 +1,20 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const http = require('http');
+const WebSocket = require('ws');
+
 const app = express();
-const port = 3000;
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-let motionData = {};
-
-// Endpoint to generate a code and store it on the server
-app.get('/generate-code', (req, res) => {
-    const code = req.query.code;
-    motionData[code] = {}; // Initialize motion data for the code
-    res.sendStatus(200);
+wss.on('connection', (ws) => {
+    // Handle incoming motion data from the client
+    ws.on('message', (data) => {
+        console.log('Received motion data:', data);
+        // Process and handle motion data as needed
+    });
 });
 
-// Endpoint to get motion data based on the entered code
-app.get('/get-motion-data', (req, res) => {
-    const code = req.query.code;
-    const data = motionData[code] || {};
-    res.json(data);
-});
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
