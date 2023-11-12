@@ -1,9 +1,13 @@
+const https = require('https');
 const express = require('express');
-const http = require('http');
 const WebSocket = require('ws');
+const fs = require('fs');
 
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer({
+  cert: fs.readFileSync('path/to/cert.pem'), // Replace with your SSL certificate path
+  key: fs.readFileSync('path/to/key.pem'),   // Replace with your SSL private key path
+}, app);
 const wss = new WebSocket.Server({ server });
 
 // Store connected clients
