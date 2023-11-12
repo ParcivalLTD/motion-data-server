@@ -1,22 +1,34 @@
+// server.js
 const express = require('express');
-const app = express();
+const http = require('http');
+const socketIO = require('socket.io');
 
-// Serve HTML file
+const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
+
 app.use(express.static('public'));
 
-// Endpoint to get motion data
-app.get('/motion-data', (req, res) => {
-    // Mock motion data for demonstration purposes
-    const motionData = {
-        accelerometer: { x: 0.1, y: 0.2, z: 9.8 },
-        gyroscope: { alpha: 0.01, beta: 0.02, gamma: 0.03 },
-    };
-
-    res.json(motionData);
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
 });
 
-// Start the server
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('motionData', (data) => {
+    console.log('Motion data received:', data);
+    // Process and handle motion data as needed
+    io.emit('motionData', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
