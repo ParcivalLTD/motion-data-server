@@ -10,7 +10,7 @@ wss.on('connection', (ws) => {
     // Handle incoming motion data from the client
     ws.on('message', (data) => {
         console.log('Received motion data:', data);
-        // Process and handle motion data as needed
+        // Process and handle motion data as needed 
     });
 });
 
