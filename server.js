@@ -1,49 +1,27 @@
-const https = require('https');
 const express = require('express');
-const WebSocket = require('ws');
-const fs = require('fs');
+const bodyParser = require('body-parser');
 
 const app = express();
-const server = https.createServer({
-  cert: fs.readFileSync('path/to/cert.pem'), // Replace with your SSL certificate path
-  key: fs.readFileSync('path/to/key.pem'),   // Replace with your SSL private key path
-}, app);
-const wss = new WebSocket.Server({ server });
+const PORT = process.env.PORT || 3000;
 
-// Store connected clients
-const clients = new Set();
+app.use(bodyParser.json());
 
-wss.on('connection', (ws) => {
-    console.log('Client connected');
-    clients.add(ws);
+let motionData = null;
 
-    // Handle incoming motion data from the client
-    ws.on('message', (data) => {
-        const motionData = JSON.parse(data);
-        console.log('Received motion data:', motionData);
-
-        // Broadcast the motion data to all connected clients
-        broadcastMotionData(motionData);
-    });
-
-    // Handle client disconnection
-    ws.on('close', () => {
-        console.log('Client disconnected');
-        clients.delete(ws);
-    });
+app.post('/api/motion', (req, res) => {
+    motionData = req.body;
+    console.log('Received motion data:', motionData);
+    res.status(200).send('Motion data received successfully.');
 });
 
-// Broadcast motion data to all connected clients
-function broadcastMotionData(data) {
-    const serializedData = JSON.stringify(data);
-    for (const client of clients) {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(serializedData);
-        }
+app.get('/api/motion', (req, res) => {
+    if (motionData) {
+        res.status(200).json(motionData);
+    } else {
+        res.status(404).send('Motion data not available.');
     }
-}
+});
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
