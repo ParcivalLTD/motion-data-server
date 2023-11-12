@@ -1,29 +1,44 @@
+// server/index.js
 const express = require('express');
 const http = require('http');
-const socketIO = require('socket.io');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = new Server(server);
+
+const mobileSockets = {};
 
 io.on('connection', (socket) => {
   console.log('A user connected');
 
   socket.on('joinRoom', (code) => {
     socket.join(code);
+    mobileSockets[code] = socket;
+    console.log(`Socket joined room: ${code}`);
   });
 
-  socket.on('motionData', (data) => {
-    const { code } = data;
-    io.to(code).emit('motionData', data);
+  socket.on('motionData', (motionData) => {
+    const { code } = motionData;
+    io.to(code).emit('motionDataFromMobile', motionData);
+  });
+
+  socket.on('checkCode', (enteredCode) => {
+    if (mobileSockets[enteredCode]) {
+      console.log(`Valid code entered: ${enteredCode}`);
+      // You can perform any action here when a valid code is entered
+    } else {
+      console.log(`Invalid code entered: ${enteredCode}`);
+      // You can perform any action here when an invalid code is entered
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('A user disconnected');
   });
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const port = process.env.PORT || 8080;
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
